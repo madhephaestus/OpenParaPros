@@ -25,8 +25,6 @@ module getMount(){
 				translate([20,0,.1])
 					cylinder(r=2.5,h=30);
 		}
-		translate([0,0,.1])
-			cylinder(r=5,h=30);
 	}
 }
 
