@@ -1,4 +1,3 @@
-
 xDimen = 200;
 yDimen = 120;
 zDimen = 210;
@@ -14,7 +13,6 @@ module placeMount(){
 
 module getStlInput(){
 	import("amputeeLeftModel.stl", convexity=3);
-	
 }
 
 module getMount(){
@@ -29,10 +27,7 @@ module getMount(){
 }
 
 module getCupShell(){
-	
 	cupScale = .1;
-	
-	
 	translate([0,(yDimen*cupScale)/2,.1]){
 		scale(1+cupScale){
 			getStlInput();
@@ -42,8 +37,6 @@ module getCupShell(){
 		getMount();
 	}
 }
-
-
 
 difference(){
 	getCupShell();
