@@ -1,5 +1,5 @@
 
-
+cableDiameter=5;
 
 module knotchHalf(orentation, negative)
 {
@@ -27,10 +27,22 @@ module knotchHalf(orentation, negative)
 }
 
 module guideTubes(cablePullRadius=5,linkLength=50){
+	tubSectionLen = linkLength/2;
+	innerSectionLen = cablePullRadius* sqrt(2);
 	translate([0,cablePullRadius,0]){
-		#cylinder(h=linkLength/3,d=3,center=true);
+		cylinder(h=tubSectionLen,d=cableDiameter,center=true);
 	}
-
+	translate([0,cablePullRadius,tubSectionLen/2-cableDiameter/2]){
+		rotate([-45,0,0])
+			translate([0,0,tubSectionLen/2])
+				cylinder(h=tubSectionLen,d=cableDiameter,center=true);
+	}
+	
+	translate([0,cablePullRadius,-(tubSectionLen/2-cableDiameter/4)]){
+		rotate([-45,0,0])
+			translate([0,0,-innerSectionLen/2.5])
+				cylinder(h=innerSectionLen,d=cableDiameter,center=true);
+	}
 }
 
 module knotch(orentation, negative){
@@ -40,7 +52,7 @@ module knotch(orentation, negative){
 	}
 	
 	mirror([0,0,1])
-			#knotchHalf(orentation, negative){
+			knotchHalf(orentation, negative){
 				translate([0,0,-.1])
 					children(0);
 			}
@@ -48,17 +60,15 @@ module knotch(orentation, negative){
 }
 
 
-module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5){
+module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness,linkWidth){
 	echo(input);
-	linkWidth = input[5];
-	linkThickness = input[4];
 	linkLength= input[3];
 	inOrentation =  input[0];
 	inNeg=input[1];
 	inPos=input[2];
-	
+	translate([0,0,linkThickness/2])
 	difference(){
-		//cube([linkLength,linkWidth,linkThickness],center=true);// finger joint brick
+		cube([linkLength,linkWidth,linkThickness],center=true);// finger joint brick
 		
 			rotate([inOrentation,0,0]){	// rotate the joint to the specified orentation	
 				union(){
@@ -67,9 +77,10 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5){
 							cube([linkLength*1.1,linkWidth*1.1,linkThickness*1.1]);
 						
 					}
-
+					translate([-.1,0,0])
 					rotate([0,90,0]){
-						cylinder(h=linkLength,d=3,center=true);
+						
+						cylinder(h=linkLength,d=cableDiameter,center=true);
 						
 						
 						guideTubes(cablePullRadius=cablePullRadius,linkLength = linkLength  );
@@ -83,31 +94,40 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5){
 	
 }
 
-module basicLeg(input, depth=0,cablePullRadius=5){
+module basicLeg(input, depth=0,cablePullRadius=5,linkThickness,linkWidth){
 	echo("Link #",depth);
 	translate([input[depth][3]/2,0,0]){
 		if(depth ==1){
 			color("blue"){
-				cableLink(input[depth],cablePullRadius);
+				cableLink(input[depth],cablePullRadius=cablePullRadius,
+		                  linkThickness=linkThickness,
+		                  linkWidth=linkWidth);
 			}
 		}else{
 			color("green"){
-				cableLink(input[depth],cablePullRadius);
+				cableLink(input[depth],cablePullRadius=cablePullRadius,
+		                  linkThickness=linkThickness,
+		                  linkWidth=linkWidth);
 			}
 		}
 		if(depth < (len(input)-1)){
 			translate([input[depth][3]/2,0,0])
-				basicLeg(input, depth+1,cablePullRadius);
+				basicLeg(input, depth+1,cablePullRadius=cablePullRadius,
+		                  linkThickness=linkThickness,
+		                  linkWidth=linkWidth);
 		}
 	}
 	
 }
 
-linkLength = 50;
-linkThickness=20;
-linkWidth=15;
-cablePullRadius=5;
-basicLeg(input = [ [0,-45,45,linkLength/2,linkThickness,linkWidth],
-                   [90,-45,45,linkLength/2,linkThickness,linkWidth],
-                   [90,0,90,linkLength,linkThickness,linkWidth]
-                  ],cablePullRadius=5); 
+linkLength = 100;
+linkThickness=25;
+linkWidth=25;
+cablePullRadius=8;
+basicLeg(input = [ [0,-45,45,linkLength/2],
+                   [90,-45,45,linkLength/2],
+                   [90,0,90,linkLength]
+                  ],
+                  cablePullRadius=cablePullRadius,
+                  linkThickness=linkThickness,
+                  linkWidth=linkWidth); 
