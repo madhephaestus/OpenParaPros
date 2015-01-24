@@ -1,5 +1,6 @@
 
 
+
 module knotchHalf(orentation, negative)
 {
 	intersection(){
@@ -22,20 +23,32 @@ module knotchHalf(orentation, negative)
 					children(0);
 		
 	}
+	
 }
+
+module guideTubes(cablePullRadius=5,linkLength=50){
+	translate([0,cablePullRadius,0]){
+		#cylinder(h=linkLength/3,d=3,center=true);
+	}
+
+}
+
 module knotch(orentation, negative){
-	knotchHalf(orentation, negative)
+	
+	knotchHalf(orentation, negative){
 		children(0);
-	// this is the center line of the joint
+	}
+	
 	mirror([0,0,1])
-			knotchHalf(orentation, negative)
+			#knotchHalf(orentation, negative){
 				translate([0,0,-.1])
 					children(0);
+			}
 			
 }
 
 
-module cableLink(input=[0,-45,45,25,10,15]){
+module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5){
 	echo(input);
 	linkWidth = input[5];
 	linkThickness = input[4];
@@ -45,44 +58,56 @@ module cableLink(input=[0,-45,45,25,10,15]){
 	inPos=input[2];
 	
 	difference(){
-		cube([linkLength,linkWidth,linkThickness],center=true);// finger joint brick
+		//cube([linkLength,linkWidth,linkThickness],center=true);// finger joint brick
 		
 			rotate([inOrentation,0,0]){	// rotate the joint to the specified orentation	
-				knotch(inPos,inNeg)
-					translate([-.15,.1,0])
-						cube([linkLength*1.1,linkWidth*1.1,linkThickness*1.1]);
-				
-			
-		}
+				union(){
+					knotch(inPos,inNeg){
+						translate([-.5,1,0])
+							cube([linkLength*1.1,linkWidth*1.1,linkThickness*1.1]);
+						
+					}
+
+					rotate([0,90,0]){
+						cylinder(h=linkLength,d=3,center=true);
+						
+						
+						guideTubes(cablePullRadius=cablePullRadius,linkLength = linkLength  );
+						mirror([0,1,0])
+							guideTubes(cablePullRadius=cablePullRadius,linkLength = linkLength  );
+					}
+					
+				}
+			}
 	}
 	
 }
 
-module basicLeg(input, depth=0){
+module basicLeg(input, depth=0,cablePullRadius=5){
 	echo("Link #",depth);
 	translate([input[depth][3]/2,0,0]){
 		if(depth ==1){
 			color("blue"){
-				cableLink(input[depth]);
+				cableLink(input[depth],cablePullRadius);
 			}
 		}else{
 			color("green"){
-				cableLink(input[depth]);
+				cableLink(input[depth],cablePullRadius);
 			}
 		}
 		if(depth < (len(input)-1)){
 			translate([input[depth][3]/2,0,0])
-				basicLeg(input, depth+1);
+				basicLeg(input, depth+1,cablePullRadius);
 		}
 	}
 	
 }
 
-linkLength = 25;
-linkThickness=10;
+linkLength = 50;
+linkThickness=20;
 linkWidth=15;
-
+cablePullRadius=5;
 basicLeg(input = [ [0,-45,45,linkLength/2,linkThickness,linkWidth],
-                   [90,-45,45,linkLength/1.5,linkThickness,linkWidth],
+                   [90,-45,45,linkLength/2,linkThickness,linkWidth],
                    [90,0,90,linkLength,linkThickness,linkWidth]
-                  ]); 
+                  ],cablePullRadius=5); 
