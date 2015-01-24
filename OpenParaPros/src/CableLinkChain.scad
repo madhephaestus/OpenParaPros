@@ -1,5 +1,5 @@
 
-cableDiameter=5;
+cableDiameter=3;
 
 module knotchHalf(orentation, negative)
 {
@@ -27,7 +27,7 @@ module knotchHalf(orentation, negative)
 }
 
 module guideTubes(cablePullRadius=5,linkLength=50){
-	tubSectionLen = linkLength/2;
+	tubSectionLen = linkLength/1.5;
 	innerSectionLen = cablePullRadius* sqrt(2);
 	translate([0,cablePullRadius,0]){
 		cylinder(h=tubSectionLen,d=cableDiameter,center=true);
@@ -120,10 +120,10 @@ module basicLeg(input, depth=0,cablePullRadius=5,linkThickness,linkWidth){
 	
 }
 
-linkLength = 100;
-linkThickness=25;
-linkWidth=25;
-cablePullRadius=8;
+linkLength = 50;
+linkThickness=linkLength/3;
+linkWidth=linkLength/3;
+cablePullRadius=5;
 basicLeg(input = [ [0,-45,45,linkLength/2],
                    [90,-45,45,linkLength/2],
                    [90,0,90,linkLength]
