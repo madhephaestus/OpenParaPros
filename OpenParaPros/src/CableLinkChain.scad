@@ -72,7 +72,7 @@ module guideTubes(cablePullRadius=5,linkLength=50){
 						cylinder(h=innerSectionLen,d=cableDiameter,center=true);
 			}
 			//tab for screw holes
-			translate([cableDiameter/3-2,cablePullRadius/2-1,tubSectionLen/2-2]){
+			translate([cableDiameter/3-1.8,cablePullRadius/2-1,tubSectionLen/2-2]){
 				
 				// void for flap
 				cube([cablePullRadius,cablePullRadius*2,cablePullRadius*2]);
@@ -115,9 +115,8 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness,linkW
 	translate([0,0,linkThickness/2])
 	difference(){
 		cube([linkLength,linkWidth,linkThickness],center=true);// finger joint brick
-		
-		rotate([inOrentation,0,0]){	// rotate the joint to the specified orentation	
-			union(){// all the cut outs
+		union(){// all the cut outs
+			rotate([inOrentation,0,0]){	// rotate the joint to the specified orentation	
 				knotch(inPos,inNeg){// hinge section
 					translate([-.5,1,0])
 						cube([linkLength*1.1,linkWidth*1.1,linkThickness*1.1]);// huinge cutter, this could be more elegant...
@@ -135,6 +134,8 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness,linkW
 				}
 				
 			}
+			// string lines
+			
 		}
 	}
 	
@@ -161,6 +162,13 @@ module basicLeg(input, depth=0,cablePullRadius=5,linkThickness,linkWidth){
 				basicLeg(input, depth+1,cablePullRadius=cablePullRadius,
 		                  linkThickness=linkThickness,
 		                  linkWidth=linkWidth);
+		}else{
+			translate([0,0,linkThickness/2])
+				difference(){
+					translate([input[depth][3]/2,0,0])
+						sphere(linkThickness/2);
+					cube([linkLength,linkWidth,linkThickness],center=true);
+				}
 		}
 	}
 	
@@ -173,4 +181,4 @@ basicLeg(input = [ [0,-45,45,linkLength/2],
                   ],
                   cablePullRadius=cablePullRadius,
                   linkThickness=linkThickness,
-                  linkWidth=linkWidth); 
+                  linkWidth=linkWidth);
