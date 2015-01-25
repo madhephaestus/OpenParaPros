@@ -161,7 +161,7 @@ module basicLeg(input, depth=0,cablePullRadius=5,linkThickness){
 			translate([0,0,linkThickness/2])
 				difference(){
 					translate([input[depth][3]/2,0,0])
-						sphere(linkThickness/2);
+						sphere(10);
 					cube([linkLength,linkThickness,linkThickness],center=true);
 				}
 		}
@@ -192,7 +192,7 @@ module radialServoBlock(numberOfServos=3, thickness){
 	rangeOfSweep=230;
 	startAngle=(-rangeOfSweep/2);
 	increment=rangeOfSweep/numberOfServos;
-	retainingDiskDiameter = calcServoDistanceForBoltOverlap(increment)*3;
+	retainingDiskDiameter = calcServoDistanceForBoltOverlap(increment)*3-2;
 	difference(){
 		union(){
 			translate([-retainingDiskDiameter/3+1,0,0])
@@ -215,15 +215,17 @@ module radialServoBlock(numberOfServos=3, thickness){
 	}
 }
 
-//#cube([180,180,.1],center=true);
 
-translate([-40,0,0]){
-	basicLeg(input = [ [0,-45,45,linkLength/2],
-	                   [90,-45,45,linkLength/2],
-	                   [90,0,90,linkLength]
-	                  ],
-	                  cablePullRadius=cablePullRadius,
-	                  linkThickness=linkThickness
-	                  );
-	radialServoBlock(3,linkThickness);
+difference(){
+	translate([-40,0,0]){
+		basicLeg(input = [ [0,-45,45,linkLength/2],
+		                   [90,0,90,linkLength/2],
+		                   [90,0,90,linkLength]
+		                  ],
+		                  cablePullRadius=cablePullRadius,
+		                  linkThickness=linkThickness
+		                  );
+		radialServoBlock(3,linkThickness);
+	}
+	#cube([180,180,.1],center=true);
 }
