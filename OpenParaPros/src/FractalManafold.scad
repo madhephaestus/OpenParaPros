@@ -2,17 +2,17 @@
 
 module link(length=20,scaleFactor=.9,maximumDepth=3,depthCurrent=0,branchingAngle=60,branchingOrder=2){
 	children(0);
-	for(i = [-branchingAngle:(branchingAngle*2)/(branchingOrder-1):branchingAngle]){
+	for(i = [-branchingOrder:1:branchingOrder]){
 		translate([0,0,length]){
-			rotate([i,0,0]){				
+			rotate([i*branchingAngle,0,0]){				
 				if(maximumDepth>depthCurrent){
-					link(length*scaleFactor,scaleFactor,maximumDepth,depthCurrent+1,branchingAngle=60,branchingOrder=2){
+					link(length*scaleFactor,scaleFactor,maximumDepth,depthCurrent+1,branchingAngle,branchingOrder){
 						scale([scaleFactor,scaleFactor,scaleFactor]){
 							children();
 						}
 					}
 				}else{
-					children(1);
+					//children(1);
 				}
 			}
 		}
@@ -20,10 +20,10 @@ module link(length=20,scaleFactor=.9,maximumDepth=3,depthCurrent=0,branchingAngl
 }
 
 
-myScale=.6;
-myHeight=120;
+myScale=.5;
+myHeight=100;
 
-link(length=myHeight,scaleFactor=myScale,maximumDepth=8,branchingAngle=60,branchingOrder=2){
+link(length=myHeight,scaleFactor=myScale,maximumDepth=5,branchingAngle=60,branchingOrder=1){
 	cylinder(h=myHeight,d=10,center=false);
 
 	cylinder(h=myHeight/5,d=10,center=false);
