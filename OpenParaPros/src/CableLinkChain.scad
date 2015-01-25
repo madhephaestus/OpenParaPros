@@ -1,12 +1,13 @@
 
 use <../../../Vitamins/Vitamins/Fasteners/Screws/High_Low_Screw_Vitamin.scad>
 use <../../../Vitamins/Vitamins/Actuators/MiniServo_Vitamin.scad>
+
 cableDiameter=3;
 
 linkLength = 60;
-linkThickness=linkLength/3;
-linkWidth=linkLength/3;
-cablePullRadius=5;
+linkThickness=35;
+
+cablePullRadius=calculateHornHoleRadius(2);
 
 
 
@@ -35,16 +36,19 @@ module knotchHalf(orentation, negative)
 	
 }
 
+
+
 module guideTubes(cablePullRadius=5,linkLength=50){
 	tubSectionLen = linkLength/1.5;
 	innerSectionLen = cablePullRadius* sqrt(2);
+	cablePathCorner = [cableDiameter/3-1.8,cablePullRadius - cableDiameter,tubSectionLen/2 -cableDiameter];
 	difference(){
 		union(){
 			translate([0,cablePullRadius,0]){
 				cylinder(h=tubSectionLen,d=cableDiameter,center=true);
 			}
 			translate([0,cablePullRadius,tubSectionLen/2-cableDiameter/2]){
-				rotate([-45,0,0])
+				rotate([-70,0,0])
 					translate([0,0,tubSectionLen/2])
 						cylinder(h=tubSectionLen,d=cableDiameter,center=true);
 			}
@@ -55,20 +59,20 @@ module guideTubes(cablePullRadius=5,linkLength=50){
 						cylinder(h=innerSectionLen,d=cableDiameter,center=true);
 			}
 			//tab for screw holes
-			translate([cableDiameter/3-1.8,cablePullRadius/2-1,tubSectionLen/2-2]){
+			translate(cablePathCorner){
 				
 				// void for flap
-				cube([cablePullRadius,cablePullRadius*2,cablePullRadius*2]);
-				translate([HiLoScrewLength()+cablePullRadius-1,cablePullRadius,4])
-				rotate([0,90,0])
-					HiLoScrew();
+				cube([cableDiameter,cableDiameter*3,cableDiameter*3]);
+				translate([HiLoScrewLength()-1,cableDiameter,cableDiameter])
+					rotate([0,90,0])
+						HiLoScrew();
 			}
 			
 		}
-		translate([cableDiameter/3-2,cablePullRadius/2,tubSectionLen/2-2]){
+		translate(cablePathCorner){
 			//flap
-			translate([1,-.1,2.1])
-				cube([cablePullRadius-2,cablePullRadius*2-2,cablePullRadius*2-2]);
+			translate([1,-.1,0])
+				#cube([cableDiameter-2,cableDiameter*3-2,cableDiameter*3-2]);
 		}
 		
 	}
@@ -89,26 +93,31 @@ module knotch(orentation, negative){
 }
 
 
-module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness,linkWidth){
+module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 	echo(input);
 	linkLength= input[3];
 	inOrentation =  input[0];
 	inNeg=input[1];
 	inPos=input[2];
+	minkowskiSphere=6;
 	translate([0,0,linkThickness/2])
+
 	difference(){
-		cube([linkLength,linkWidth,linkThickness],center=true);// finger joint brick
+		minkowski(){
+			cube([linkLength,linkThickness-minkowskiSphere,linkThickness-minkowskiSphere],center=true);// finger joint brick
+			sphere(minkowskiSphere/2);
+		}
 		union(){// all the cut outs
 			rotate([inOrentation,0,0]){	// rotate the joint to the specified orentation	
 				knotch(inPos,inNeg){// hinge section
 					translate([-.5,1,0])
-						cube([linkLength*1.1,linkWidth*1.1,linkThickness*1.1]);// hinge cutter, this could be more elegant...
+						cube([linkLength*1.1,linkThickness*1.1,linkThickness*1.1]);// hinge cutter, this could be more elegant...
 					
 				}
 				translate([-.1,0,0])
 				rotate([0,90,0]){
 					
-					cylinder(h=linkLength,d=cableDiameter,center=true);// center tube
+					cylinder(h=linkLength+minkowskiSphere,d=cableDiameter,center=true);// center tube
 					
 					// string lines
 					guideTubes(cablePullRadius=cablePullRadius,linkLength = linkLength  );
@@ -120,23 +129,22 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness,linkW
 			
 		}
 	}
+
 	
 }
 
-module basicLeg(input, depth=0,cablePullRadius=5,linkThickness,linkWidth){
+module basicLeg(input, depth=0,cablePullRadius=5,linkThickness){
 	echo("Link #",depth);
 	translate([input[depth][3]/2,0,0]){
 		if(depth ==1){
 			color("blue"){
 				cableLink(input[depth],cablePullRadius=cablePullRadius,
-		                  linkThickness=linkThickness,
-		                  linkWidth=linkWidth);
+		                  linkThickness=linkThickness);
 			}
 		}else{
 			color("green"){
 				cableLink(input[depth],cablePullRadius=cablePullRadius,
-		                  linkThickness=linkThickness,
-		                  linkWidth=linkWidth);
+		                  linkThickness=linkThickness);
 			}
 		}
 		if(depth < (len(input)-1)){
@@ -144,14 +152,13 @@ module basicLeg(input, depth=0,cablePullRadius=5,linkThickness,linkWidth){
 				basicLeg(	input, 
 							depth+1,// increment the depth to walk down the list
 							cablePullRadius=cablePullRadius,
-							linkThickness=linkThickness,
-							linkWidth=linkWidth);
+							linkThickness=linkThickness);
 		}else{
 			translate([0,0,linkThickness/2])
 				difference(){
 					translate([input[depth][3]/2,0,0])
 						sphere(linkThickness/2);
-					cube([linkLength,linkWidth,linkThickness],center=true);
+					cube([linkLength,linkThickness,linkThickness],center=true);
 				}
 		}
 	}
@@ -159,17 +166,17 @@ module basicLeg(input, depth=0,cablePullRadius=5,linkThickness,linkWidth){
 }
 
 module placePilarBlock(thickness){
-	translate([-cableDiameter,-(thickness+cableDiameter)/2,0]){
+	translate([-cableDiameter-4,-(15+cableDiameter)/2,0]){
 		children(0);
 	}
-	translate([-cableDiameter,(thickness+cableDiameter)/2,0]){
+	translate([-cableDiameter-4,(15+cableDiameter)/2,0]){
 		children(0);
 	}
 }
 
 module pilarBlock(thickness){
 	placePilarBlock(thickness)
-		cylinder(thickness,d=thickness);// cable pilar
+		cylinder(thickness-.1,d=15);// cable pilar
 	
 }
 
@@ -181,10 +188,11 @@ module radialServoBlock(numberOfServos=3, thickness){
 	rangeOfSweep=230;
 	startAngle=(-rangeOfSweep/2);
 	increment=rangeOfSweep/numberOfServos;
+	retainingDiskDiameter = calcServoDistanceForBoltOverlap(increment)*3;
 	difference(){
 		union(){
-			translate([-thickness+2,0,0])
-				cylinder(thickness/2-cableDiameter,d=thickness*3.2);// base circle
+			translate([-retainingDiskDiameter/3+1,0,0])
+				cylinder(thickness/2-cableDiameter,d=retainingDiskDiameter);// base circle
 			pilarBlock(thickness);
 
 		}
@@ -196,8 +204,8 @@ module radialServoBlock(numberOfServos=3, thickness){
 		for (i = [startAngle+(increment/2):increment:(rangeOfSweep+startAngle)-1]) { 
 			echo("Servo at ",i, " at distance ",calcServoDistanceForBoltOverlap(increment));
 			rotate([0,0,-i+180])
-				translate([calcServoDistanceForBoltOverlap(increment),-MiniServoBaseLength()/2,-MiniServoHeight()/2+1.1])
-					#MiniServoMotor(true, 2, true, .2);
+				translate([calcServoDistanceForBoltOverlap(increment),-MiniServoBaseLength()/2,thickness/2-MiniServoHeight()+MiniServoWingsHeight()])
+					MiniServoMotor(true, 2, true, .2);
 		}
 		
 	}
@@ -211,7 +219,7 @@ translate([-40,0,0]){
 	                   [90,0,90,linkLength]
 	                  ],
 	                  cablePullRadius=cablePullRadius,
-	                  linkThickness=linkThickness,
-	                  linkWidth=linkWidth);
+	                  linkThickness=linkThickness
+	                  );
 	radialServoBlock(3,linkThickness);
 }
