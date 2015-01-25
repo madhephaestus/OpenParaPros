@@ -1,29 +1,12 @@
 
+use <../../../Vitamins/Vitamins/Fasteners/Screws/High_Low_Screw_Vitamin.scad>
+use <../../../Vitamins/Vitamins/Actuators/MiniServo_Vitamin.scad>
 cableDiameter=3;
 
 linkLength = 60;
 linkThickness=linkLength/3;
 linkWidth=linkLength/3;
 cablePullRadius=5;
-
-function HiLoScrewDiameter(3dPrinterTolerance=.4)= 3.6+3dPrinterTolerance;  
-function HiLoScrewLength(3dPrinterTolerance=.4)= linkWidth+3dPrinterTolerance;
-function HiLoScrewHeadDiameter(3dPrinterTolerance=.4)= 6.7+3dPrinterTolerance;
-function HiLoScrewHeadHeight(3dPrinterTolerance=.4)= 2.5+3dPrinterTolerance;
-
-//err on the side of smaller tolerances for screws
-
-module HiLoScrew(3dPrinterTolerance=.4)
-{
-	union()
-	{
-		translate([0,0,-HiLoScrewLength(3dPrinterTolerance)])
-		{
-			cylinder(HiLoScrewLength(3dPrinterTolerance), HiLoScrewDiameter(3dPrinterTolerance)/2, HiLoScrewDiameter(3dPrinterTolerance)/2);
-		}
-		cylinder(HiLoScrewHeadHeight(3dPrinterTolerance), HiLoScrewHeadDiameter(3dPrinterTolerance)/2,HiLoScrewHeadDiameter(3dPrinterTolerance)/2);
-	}
-}
 
 
 
@@ -78,7 +61,7 @@ module guideTubes(cablePullRadius=5,linkLength=50){
 				cube([cablePullRadius,cablePullRadius*2,cablePullRadius*2]);
 				translate([HiLoScrewLength()+cablePullRadius-1,cablePullRadius,4])
 				rotate([0,90,0])
-					#HiLoScrew();
+					HiLoScrew();
 			}
 			
 		}
@@ -175,11 +158,60 @@ module basicLeg(input, depth=0,cablePullRadius=5,linkThickness,linkWidth){
 	
 }
 
+module placePilarBlock(thickness){
+	translate([-cableDiameter,-(thickness+cableDiameter)/2,0]){
+		children(0);
+	}
+	translate([-cableDiameter,(thickness+cableDiameter)/2,0]){
+		children(0);
+	}
+}
 
-basicLeg(input = [ [0,-45,45,linkLength/2],
-                   [90,-45,45,linkLength/2],
-                   [90,0,90,linkLength]
-                  ],
-                  cablePullRadius=cablePullRadius,
-                  linkThickness=linkThickness,
-                  linkWidth=linkWidth);
+module pilarBlock(thickness){
+	placePilarBlock(thickness)
+		cylinder(thickness,d=thickness);// cable pilar
+	
+}
+
+
+function calcServoDistanceForBoltOverlap(incrementAngle) = (MiniServoRestrainingScrewDistance()/2)/tan(incrementAngle/2);
+
+
+module radialServoBlock(numberOfServos=3, thickness){
+	rangeOfSweep=230;
+	startAngle=(-rangeOfSweep/2);
+	increment=rangeOfSweep/numberOfServos;
+	difference(){
+		union(){
+			translate([-thickness+2,0,0])
+				cylinder(thickness/2-cableDiameter,d=thickness*3.2);// base circle
+			pilarBlock(thickness);
+
+		}
+		placePilarBlock(thickness){
+			translate([0,0,HiLoScrewLength()-.1])
+				HiLoScrew();
+		}
+		translate([-MiniServoRestrainingScrewDistance()/2,0,0])
+		for (i = [startAngle+(increment/2):increment:(rangeOfSweep+startAngle)-1]) { 
+			echo("Servo at ",i, " at distance ",calcServoDistanceForBoltOverlap(increment));
+			rotate([0,0,-i+180])
+				translate([calcServoDistanceForBoltOverlap(increment),-MiniServoBaseLength()/2,-MiniServoHeight()/2+1.1])
+					#MiniServoMotor(true, 2, true, .2);
+		}
+		
+	}
+}
+
+//#cube([180,180,.1],center=true);
+
+translate([-40,0,0]){
+	basicLeg(input = [ [0,-45,45,linkLength/2],
+	                   [90,-45,45,linkLength/2],
+	                   [90,0,90,linkLength]
+	                  ],
+	                  cablePullRadius=cablePullRadius,
+	                  linkThickness=linkThickness,
+	                  linkWidth=linkWidth);
+	radialServoBlock(3,linkThickness);
+}
