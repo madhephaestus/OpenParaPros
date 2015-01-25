@@ -3,11 +3,12 @@ use <../../../Vitamins/Vitamins/Fasteners/Screws/High_Low_Screw_Vitamin.scad>
 use <../../../Vitamins/Vitamins/Actuators/MiniServo_Vitamin.scad>
 
 cableDiameter=3;
+cablePullRadius=calculateHornHoleRadius(2);
 
 linkLength = 60;
-linkThickness=35;
+linkThickness=cablePullRadius*2.7;
 
-cablePullRadius=calculateHornHoleRadius(2);
+
 
 
 
@@ -103,9 +104,12 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 	translate([0,0,linkThickness/2])
 
 	difference(){
-		minkowski(){
-			cube([linkLength,linkThickness-minkowskiSphere,linkThickness-minkowskiSphere+.2],center=true);// finger joint brick
-			sphere(minkowskiSphere/2);
+		intersection(){
+			minkowski(){
+				cube([linkLength-minkowskiSphere/2,linkThickness-minkowskiSphere,linkThickness-minkowskiSphere+.2],center=true);// finger joint brick
+				sphere(minkowskiSphere/2);
+			}
+			cube([linkLength,linkThickness,linkThickness],center=true);// finger joint brick
 		}
 		union(){// all the cut outs
 			rotate([inOrentation,0,0]){	// rotate the joint to the specified orentation	
