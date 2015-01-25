@@ -219,7 +219,7 @@ module radialServoBlock(numberOfServos=3, thickness){
 difference(){
 	translate([-40,0,0]){
 		basicLeg(input = [ [0,-45,45,linkLength/2],
-		                   [90,0,90,linkLength/2],
+		                   [90,-45,45,linkLength/2],
 		                   [90,0,90,linkLength]
 		                  ],
 		                  cablePullRadius=cablePullRadius,
