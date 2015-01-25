@@ -104,7 +104,7 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 
 	difference(){
 		minkowski(){
-			cube([linkLength,linkThickness-minkowskiSphere,linkThickness-minkowskiSphere],center=true);// finger joint brick
+			cube([linkLength,linkThickness-minkowskiSphere,linkThickness-minkowskiSphere+.2],center=true);// finger joint brick
 			sphere(minkowskiSphere/2);
 		}
 		union(){// all the cut outs
@@ -197,7 +197,7 @@ module radialServoBlock(numberOfServos=3, thickness){
 
 		}
 		placePilarBlock(thickness){
-			translate([0,0,HiLoScrewLength()-.1])
+			translate([0,0,HiLoScrewLength()-.2])
 				HiLoScrew();
 		}
 		translate([-MiniServoRestrainingScrewDistance()/2,0,0])
