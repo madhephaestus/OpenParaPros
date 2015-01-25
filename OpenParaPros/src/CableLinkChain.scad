@@ -119,7 +119,7 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness,linkW
 			rotate([inOrentation,0,0]){	// rotate the joint to the specified orentation	
 				knotch(inPos,inNeg){// hinge section
 					translate([-.5,1,0])
-						cube([linkLength*1.1,linkWidth*1.1,linkThickness*1.1]);// huinge cutter, this could be more elegant...
+						cube([linkLength*1.1,linkWidth*1.1,linkThickness*1.1]);// hinge cutter, this could be more elegant...
 					
 				}
 				translate([-.1,0,0])
@@ -134,7 +134,6 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness,linkW
 				}
 				
 			}
-			// string lines
 			
 		}
 	}
@@ -159,9 +158,11 @@ module basicLeg(input, depth=0,cablePullRadius=5,linkThickness,linkWidth){
 		}
 		if(depth < (len(input)-1)){
 			translate([input[depth][3]/2,0,0])
-				basicLeg(input, depth+1,cablePullRadius=cablePullRadius,
-		                  linkThickness=linkThickness,
-		                  linkWidth=linkWidth);
+				basicLeg(	input, 
+							depth+1,// increment the depth to walk down the list
+							cablePullRadius=cablePullRadius,
+							linkThickness=linkThickness,
+							linkWidth=linkWidth);
 		}else{
 			translate([0,0,linkThickness/2])
 				difference(){
