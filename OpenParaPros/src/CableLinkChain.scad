@@ -79,18 +79,23 @@ module guideTubes(cablePullRadius=5,linkLength=50){
 	}
 }
 
-module knotch(orentation, negative){
-	
-	knotchHalf(orentation, negative){
-		children(0);
-	}
-	
-	mirror([0,0,1])
+module knotch(orentation, negative,linkThickness){
+	difference(){
+		union(){
 			knotchHalf(orentation, negative){
-				translate([0,0,-.1])
-					children(0);
+				children(0);
 			}
 			
+			mirror([0,0,1])
+					knotchHalf(orentation, negative){
+						translate([0,0,-.1])
+							children(0);
+					}
+			
+			cube([cableDiameter,linkThickness+1,linkThickness+1], center=true);		
+		}
+		cube([cableDiameter+.1,cableDiameter+.1,linkThickness+1.1], center=true);		
+	}
 }
 
 
@@ -113,9 +118,11 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 		}
 		union(){// all the cut outs
 			rotate([inOrentation,0,0]){	// rotate the joint to the specified orentation	
-				knotch(inPos,inNeg){// hinge section
+				knotch(inPos,inNeg,linkThickness){// hinge section
 					translate([-.5,1,0])
-						cube([linkLength*1.1,linkThickness*1.1,linkThickness*1.1]);// hinge cutter, this could be more elegant...
+					
+					
+						cube([linkThickness*1.1,linkThickness*1.1,linkThickness*1.1]);// hinge cutter, this could be more elegant...
 					
 				}
 				translate([-.1,0,0])
@@ -139,6 +146,7 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 
 module basicLeg(input, depth=0,cablePullRadius=5,linkThickness){
 	echo("Link #",depth);
+	sphereOffset=15;
 	translate([input[depth][3]/2,0,0]){
 		if(depth ==1){
 			color("blue"){
@@ -160,9 +168,10 @@ module basicLeg(input, depth=0,cablePullRadius=5,linkThickness){
 		}else{
 			translate([0,0,linkThickness/2])
 				difference(){
-					translate([input[depth][3]/2,0,0])
-						sphere(10);
-					cube([linkLength,linkThickness,linkThickness],center=true);
+				
+					translate([input[depth][3]/2-sphereOffset,0,0])
+						sphere(5+sphereOffset, but);
+					cube([linkLength,linkThickness*5,linkThickness*5],center=true);
 				}
 		}
 	}
@@ -218,9 +227,9 @@ module radialServoBlock(numberOfServos=3, thickness){
 
 difference(){
 	translate([-40,0,0]){
-		basicLeg(input = [ [0,-45,45,linkLength/2],
-		                   [90,-45,45,linkLength/2],
-		                   [90,0,90,linkLength]
+		basicLeg(input = [ [90,-45,45,linkLength/2],
+		                   [0,-45,45,linkLength/2],
+		                   [0,0,90,linkLength]
 		                  ],
 		                  cablePullRadius=cablePullRadius,
 		                  linkThickness=linkThickness
