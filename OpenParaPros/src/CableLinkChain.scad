@@ -91,10 +91,11 @@ module knotch(orentation, negative,linkThickness){
 						translate([0,0,-.1])
 							children(0);
 					}
-			
-			cube([cableDiameter,linkThickness+1,linkThickness+1], center=true);		
+			// hinge keep-away
+			cube([cableDiameter,cableDiameter+5,linkThickness+1], center=true);		
 		}
-		cube([cableDiameter+.1,cableDiameter+.1,linkThickness+1.1], center=true);		
+		// THis is the hinge shape itself
+		cube([cableDiameter+.1,cableDiameter-1,linkThickness+1.1], center=true);		
 	}
 }
 
