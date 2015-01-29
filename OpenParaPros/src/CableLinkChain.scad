@@ -95,10 +95,10 @@ module knotch(orentation, negative,linkThickness){
 							children(0);
 					}
 			// hinge keep-away //TODO make these no longer magic numbers
-			cube([5,10,linkThickness+1], center=true);		
+			cube([5,8,linkThickness+1], center=true);		
 		}
 		// THis is the hinge shape itself //TODO make these no longer magic numbers
-		cube([4.2,hingeThickness,linkThickness+1.1], center=true);		
+		cube([10,hingeThickness,linkThickness+1.1], center=true);		
 	}
 }
 
@@ -153,24 +153,43 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 	
 }
 
-function getCurlOrentation(input) = (input[0]==0?input[2]:0);
-function getCurlTranslateVector(input) =(getLinkLengthBounded(input)/2-minimumLinkLength/2);
+function getCurlOrentation(input) = (input[0]==0?input[2]/2:0);
+
+function getCurlTranslateVector(input) =(sin(getCurlOrentation(input))*(getLinkLengthBounded(input)/2-minimumLinkLength/2));
+
+//TODO this function is not yet working
+module moveFromLinkCenterToJointCenter(input){
+	linkCurlVector=[0,0,getCurlOrentation(input)];
+	translationOffset = (getLinkLengthBounded(input)-minimumLinkLength)/2;
+	translate([translationOffset,0,0])
+	rotate(linkCurlVector)
+	{
+		translate([0,translationOffset,0])
+		children();
+	}
+}
 
 module curlLink(linkCurlVector,input,linkThickness){
 	cubeVector=[getLinkLengthBounded(input),linkThickness,linkThickness];
 	curlTranslate=getCurlTranslateVector(input);
-	difference(){
-		children(0);
-		translate([-getLinkLengthBounded(input)/2+minimumLinkLength/2,-linkThickness/2,0])
-			cube([getLinkLengthBounded(input)-minimumLinkLength/2+.1,linkThickness,linkThickness]);
-	}
-	rotate(linkCurlVector)
-		translate([curlTranslate,curlTranslate,0])
-			difference(){
-				children(0);
-				translate([-getLinkLengthBounded(input)/2+minimumLinkLength/4,0,linkThickness/2])
-					cube([minimumLinkLength/2+.1,linkThickness,linkThickness], center=true);
+	if(getCurlOrentation(input) != 0){
+		difference(){
+			children(0);
+			translate([-getLinkLengthBounded(input)/2+minimumLinkLength/2,-linkThickness/2,0])
+				cube([getLinkLengthBounded(input)-minimumLinkLength/2+.1,linkThickness,linkThickness]);
+		}
+		
+		moveFromLinkCenterToJointCenter(input){
+				difference(){
+					children(0);
+					translate([-getLinkLengthBounded(input)/2+minimumLinkLength/4,0,linkThickness/2])
+						cube([minimumLinkLength/2+.1,linkThickness,linkThickness], center=true);
+				}
+				
 			}
+	}else{
+		children(0);
+	}
 }
 
 module basicLeg(input, depth=0,cablePullRadius=5,linkThickness){
