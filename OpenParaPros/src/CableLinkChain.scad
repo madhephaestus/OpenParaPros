@@ -11,7 +11,7 @@ linkThickness=27;
 minkowskiSphere=6;
 
 minimumLinkLength=40;
-
+hingeThickness=2;
 
 
 module knotchHalf(orentation, negative)
@@ -69,7 +69,7 @@ module guideTubes(cablePullRadius=5,linkLength=50){
 				//cube([cableDiameter,cableDiameter*3,cableDiameter*3]);
 				translate([HiLoScrewLength(),+HiLoScrewDiameter()/2+cableDiameter/2,-cableDiameter/2+HiLoScrewDiameter()/2])
 					rotate([0,90,0])
-						#HiLoScrew();
+						HiLoScrew();
 			}
 			
 		}
@@ -95,10 +95,10 @@ module knotch(orentation, negative,linkThickness){
 							children(0);
 					}
 			// hinge keep-away //TODO make these no longer magic numbers
-			cube([3,8,linkThickness+1], center=true);		
+			cube([5,10,linkThickness+1], center=true);		
 		}
 		// THis is the hinge shape itself //TODO make these no longer magic numbers
-		cube([4.2,2,linkThickness+1.1], center=true);		
+		cube([4.2,hingeThickness,linkThickness+1.1], center=true);		
 	}
 }
 
@@ -124,7 +124,7 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 			cube([linkLength,linkThickness,linkThickness],center=true);// finger joint brick
 		}
 		union(){// all the cut outs
-			#translate([-linkLength/2+minimumLinkLength/2,0,0])
+			translate([-linkLength/2+minimumLinkLength/2,0,0])
 			rotate([inOrentation,0,0]){	// rotate the joint to the specified orentation	
 				
 				knotch(inPos,inNeg,linkThickness){// hinge section
@@ -153,53 +153,69 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 	
 }
 
+function getCurlOrentation(input) = (input[0]==0?input[2]:0);
+function getCurlTranslateVector(input) =(getLinkLengthBounded(input)/2-minimumLinkLength/2);
+
+module curlLink(linkCurlVector,input,linkThickness){
+	cubeVector=[getLinkLengthBounded(input),linkThickness,linkThickness];
+	curlTranslate=getCurlTranslateVector(input);
+	difference(){
+		children(0);
+		translate([-getLinkLengthBounded(input)/2+minimumLinkLength/2,-linkThickness/2,0])
+			cube([getLinkLengthBounded(input)-minimumLinkLength/2+.1,linkThickness,linkThickness]);
+	}
+	rotate(linkCurlVector)
+		translate([curlTranslate,curlTranslate,0])
+			difference(){
+				children(0);
+				translate([-getLinkLengthBounded(input)/2+minimumLinkLength/4,0,linkThickness/2])
+					cube([minimumLinkLength/2+.1,linkThickness,linkThickness], center=true);
+			}
+}
+
 module basicLeg(input, depth=0,cablePullRadius=5,linkThickness){
 	
 	echo("Link #",depth," thicness ",linkThickness);
 	sphereOffset=15;
+	linkCurlVector=[0,0,getCurlOrentation(input[depth])];
 	translate([getLinkLengthBounded(input[depth])/2,0,0]){
-		if(depth ==1){
-			color("blue"){
-				cableLink(input[depth],cablePullRadius=cablePullRadius,
-		                  linkThickness=linkThickness);
-			}
-		}else{
-			color("green"){
-				cableLink(input[depth],cablePullRadius=cablePullRadius,
-		                  linkThickness=linkThickness);
-			}
+		curlLink(linkCurlVector,input[depth],linkThickness){
+			cableLink(input[depth],cablePullRadius=cablePullRadius,
+		            linkThickness=linkThickness);
 		}
-		if(depth < (len(input)-1)){
-			translate([getLinkLengthBounded(input[depth])/2,0,0])
-				basicLeg(	input, 
-							depth+1,// increment the depth to walk down the list
-							cablePullRadius=cablePullRadius,
-							linkThickness=linkThickness);
-		}else{
-			translate([0,0,linkThickness/2])
-				difference(){
-				
-					translate([input[depth][3]/2-sphereOffset,0,0])
-						sphere(5+sphereOffset, but);
-					cube([linkLength,linkThickness*5,linkThickness*5],center=true);
+		rotate(linkCurlVector)
+			translate([getLinkLengthBounded(input[depth])/2,0,0]){
+				if(depth < (len(input)-1)){				
+							basicLeg(	input, 
+										depth+1,// increment the depth to walk down the list
+										cablePullRadius=cablePullRadius,
+										linkThickness=linkThickness);
+				}else{
+					translate([-getCurlTranslateVector(input[depth])*2,getCurlTranslateVector(input[depth]),linkThickness/2])
+						difference(){
+						
+							translate([input[depth][3]/2-sphereOffset,0,0])
+								sphere(5+sphereOffset, but);
+							cube([linkLength,linkThickness*5,linkThickness*5],center=true);
+						}
 				}
-		}
+			}
 	}
 	
 }
 
 module placePilarBlock(thickness){
-	translate([-cableDiameter-4,-(15+cableDiameter)/2,0]){
+	translate([-4,-(10+cableDiameter)/2,0]){
 		children(0);
 	}
-	translate([-cableDiameter-4,(15+cableDiameter)/2,0]){
+	translate([-4,(10+cableDiameter)/2,0]){
 		children(0);
 	}
 }
 
 module pilarBlock(thickness){
 	placePilarBlock(thickness)
-		cylinder(thickness-.1,d=15);// cable pilar
+		cylinder(thickness-.1,d=10);// cable pilar
 	
 }
 
