@@ -2,7 +2,7 @@
 use <../../../Vitamins/Vitamins/Fasteners/Screws/High_Low_Screw_Vitamin.scad>
 use <../../../Vitamins/Vitamins/Actuators/MiniServo_Vitamin.scad>
 
-cableDiameter=6;
+cableDiameter=5;
 cablePullRadius=calculateHornHoleRadius(2)-cableDiameter/2;
 
 linkLength = 60;
@@ -153,7 +153,7 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 	
 }
 
-function getCurlOrentation(input) = (input[0]==0?input[2]/2:0);
+function getCurlOrentation(input) = (input[0]==0?input[2]/1.5:0);
 
 function getCurlTranslateVector(input) =((getLinkLengthBounded(input)/2-minimumLinkLength/2));
 
@@ -184,6 +184,7 @@ module curlLink(linkCurlVector,input,linkThickness){
 					translate([-getLinkLengthBounded(input)/2+minimumLinkLength/4,0,linkThickness/2])
 						cube([minimumLinkLength/2+.1,linkThickness,linkThickness], center=true);
 				}
+				// ading a tube to round out the joint
 				translate([-getCurlTranslateVector(input),0,linkThickness/2])
 					difference(){
 						cylinder(h=linkThickness,d=hingeThickness,center=true,$fn=100);// center tube of joint
@@ -199,8 +200,9 @@ module curlLink(linkCurlVector,input,linkThickness){
 module basicLeg(input, depth=0,cablePullRadius=5,linkThickness){
 	
 	echo("Link #",depth," thicness ",linkThickness);
-	sphereOffset=15;
+
 	linkCurlVector=[0,0,getCurlOrentation(input[depth])];
+	sphereDiameter = linkThickness*1.5;
 	translate([getLinkLengthBounded(input[depth])/2,0,0]){
 		curlLink(linkCurlVector,input[depth],linkThickness){
 			cableLink(input[depth],cablePullRadius=cablePullRadius,
@@ -208,19 +210,19 @@ module basicLeg(input, depth=0,cablePullRadius=5,linkThickness){
 		}
 
 		if(depth < (len(input)-1)){		
-			rotate(linkCurlVector)
-				translate([getLinkLengthBounded(input[depth])/2,0,0])
-					basicLeg(	input, 
-								depth+1,// increment the depth to walk down the list
-								cablePullRadius=cablePullRadius,
-								linkThickness=linkThickness);
+			moveFromLinkCenterToJointCenter(input[depth])
+				translate([minimumLinkLength/2,0,0])
+						basicLeg(	input, 
+									depth+1,// increment the depth to walk down the list
+									cablePullRadius=cablePullRadius,
+									linkThickness=linkThickness);
 		}else{
 			moveFromLinkCenterToJointCenter(input[depth]){
 				translate([0,0,linkThickness/2])
 					difference(){
-						translate([input[depth][3]/2-sphereOffset,0,0])
-							sphere(5+sphereOffset, but);
-						cube([linkLength,linkThickness*5,linkThickness*5],center=true);
+						translate([getCurlTranslateVector(input[depth])+4,0,0])
+							sphere(d=sphereDiameter, center= true);
+						cube([getLinkLengthBounded(input[depth]),linkThickness*5,linkThickness*5],center=true);
 					}
 			}
 		}
@@ -279,14 +281,14 @@ module radialServoBlock(numberOfServos=3, thickness){
 
 difference(){
 	translate([-40,0,0]){
-		basicLeg(input = [ [90,-45,45,linkLength/2],
-		                   [0,-45,45,linkLength/2],
-		                   [0,0,90,linkLength]
+		basicLeg(input = [ [90,-45,45,minimumLinkLength],
+		                   [0,-45,45,60],
+		                   [0,0,90,60+minimumLinkLength/2-4]
 		                  ],
 		                  cablePullRadius=cablePullRadius,
 		                  linkThickness=linkThickness
 		                  );
 		radialServoBlock(3,linkThickness);
 	}
-	//#cube([180,180,.1],center=true);
+	#cube([180,180,.1],center=true);
 }
