@@ -2,13 +2,15 @@
 use <../../../Vitamins/Vitamins/Fasteners/Screws/High_Low_Screw_Vitamin.scad>
 use <../../../Vitamins/Vitamins/Actuators/MiniServo_Vitamin.scad>
 
-cableDiameter=3;
-cablePullRadius=calculateHornHoleRadius(2);
+cableDiameter=6;
+cablePullRadius=calculateHornHoleRadius(2)-cableDiameter/2;
 
 linkLength = 60;
-linkThickness=cablePullRadius*2.7;
+linkThickness=27;
 
+minkowskiSphere=6;
 
+minimumLinkLength=40;
 
 
 
@@ -40,42 +42,43 @@ module knotchHalf(orentation, negative)
 
 
 module guideTubes(cablePullRadius=5,linkLength=50){
-	tubSectionLen = linkLength/1.5;
+	//linkLength=30;
+	tubSectionLen = 32;
 	innerSectionLen = cablePullRadius* sqrt(2);
-	cablePathCorner = [cableDiameter/3-1.8,cablePullRadius - cableDiameter,tubSectionLen/2 -cableDiameter];
+	cablePathCorner = [0,cablePullRadius-cableDiameter/2,tubSectionLen/2];
 	difference(){
 		union(){
 			translate([0,cablePullRadius,0]){
-				cylinder(h=tubSectionLen,d=cableDiameter,center=true);
+				cylinder(h=linkLength,d=cableDiameter,center=true,$fn=6);
 			}
-			translate([0,cablePullRadius,tubSectionLen/2-cableDiameter/2]){
-				rotate([-70,0,0])
+			translate(cablePathCorner){
+				rotate([-90,0,0])
 					translate([0,0,tubSectionLen/2])
-						cylinder(h=tubSectionLen,d=cableDiameter,center=true);
+						cylinder(h=tubSectionLen,d=cableDiameter,center=true,$fn=6);// cable out-put tube
 			}
 			
 			translate([0,cablePullRadius,-(tubSectionLen/2-cableDiameter/4)]){
-				rotate([-45,0,0])
+				rotate([-90,0,0])
 					translate([0,0,-innerSectionLen/2.5])
-						cylinder(h=innerSectionLen,d=cableDiameter,center=true);
+						cylinder(h=linkLength*2,d=cableDiameter,center=true,$fn=6);
 			}
 			//tab for screw holes
 			translate(cablePathCorner){
 				
 				// void for flap
-				cube([cableDiameter,cableDiameter*3,cableDiameter*3]);
-				translate([HiLoScrewLength()-1,cableDiameter,cableDiameter])
+				//cube([cableDiameter,cableDiameter*3,cableDiameter*3]);
+				translate([HiLoScrewLength(),+HiLoScrewDiameter()/2+cableDiameter/2,-cableDiameter/2+HiLoScrewDiameter()/2])
 					rotate([0,90,0])
-						HiLoScrew();
+						#HiLoScrew();
 			}
 			
 		}
-		translate(cablePathCorner){
-			//flap
-			translate([1,-.1,0])
-				#cube([cableDiameter-2,cableDiameter*3-2,cableDiameter*3-2]);
-		}
-		
+//		translate(cablePathCorner){
+//			//flap
+//			translate([1,-.1,0])
+//				#cube([cableDiameter-2,cableDiameter*3-2,cableDiameter*3-2]);
+//		}
+//		
 	}
 }
 
@@ -91,22 +94,25 @@ module knotch(orentation, negative,linkThickness){
 						translate([0,0,-.1])
 							children(0);
 					}
-			// hinge keep-away
-			cube([cableDiameter,cableDiameter+5,linkThickness+1], center=true);		
+			// hinge keep-away //TODO make these no longer magic numbers
+			cube([3,8,linkThickness+1], center=true);		
 		}
-		// THis is the hinge shape itself
-		cube([cableDiameter+.1,cableDiameter-1,linkThickness+1.1], center=true);		
+		// THis is the hinge shape itself //TODO make these no longer magic numbers
+		cube([4.2,2,linkThickness+1.1], center=true);		
 	}
 }
 
+function getLinkLengthBounded(a) = (a[3]<minimumLinkLength?minimumLinkLength:a[3]);
 
 module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 	echo(input);
-	linkLength= input[3];
+	linkLength=getLinkLengthBounded(input);
+
+	
 	inOrentation =  input[0];
 	inNeg=input[1];
 	inPos=input[2];
-	minkowskiSphere=6;
+	
 	translate([0,0,linkThickness/2])
 
 	difference(){
@@ -118,7 +124,9 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 			cube([linkLength,linkThickness,linkThickness],center=true);// finger joint brick
 		}
 		union(){// all the cut outs
+			#translate([-linkLength/2+minimumLinkLength/2,0,0])
 			rotate([inOrentation,0,0]){	// rotate the joint to the specified orentation	
+				
 				knotch(inPos,inNeg,linkThickness){// hinge section
 					translate([-.5,1,0])
 					
@@ -146,9 +154,10 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 }
 
 module basicLeg(input, depth=0,cablePullRadius=5,linkThickness){
-	echo("Link #",depth);
+	
+	echo("Link #",depth," thicness ",linkThickness);
 	sphereOffset=15;
-	translate([input[depth][3]/2,0,0]){
+	translate([getLinkLengthBounded(input[depth])/2,0,0]){
 		if(depth ==1){
 			color("blue"){
 				cableLink(input[depth],cablePullRadius=cablePullRadius,
@@ -161,7 +170,7 @@ module basicLeg(input, depth=0,cablePullRadius=5,linkThickness){
 			}
 		}
 		if(depth < (len(input)-1)){
-			translate([input[depth][3]/2,0,0])
+			translate([getLinkLengthBounded(input[depth])/2,0,0])
 				basicLeg(	input, 
 							depth+1,// increment the depth to walk down the list
 							cablePullRadius=cablePullRadius,
@@ -221,7 +230,8 @@ module radialServoBlock(numberOfServos=3, thickness){
 				translate([calcServoDistanceForBoltOverlap(increment),-MiniServoBaseLength()/2,thickness/2-MiniServoHeight()+MiniServoWingsHeight()])
 					MiniServoMotor(true, 2, true, .2);
 		}
-		
+		translate([0,-thickness/2+minkowskiSphere/2,-.1])
+		cube([thickness,thickness-minkowskiSphere,thickness+.2]);// finger joint brick
 	}
 }
 
@@ -237,5 +247,5 @@ difference(){
 		                  );
 		radialServoBlock(3,linkThickness);
 	}
-	#cube([180,180,.1],center=true);
+	//#cube([180,180,.1],center=true);
 }
