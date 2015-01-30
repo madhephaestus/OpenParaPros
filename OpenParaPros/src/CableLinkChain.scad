@@ -45,16 +45,16 @@ module guideTubes(cablePullRadius=5,linkLength=50){
 	//linkLength=30;
 	tubSectionLen = 32;
 	innerSectionLen = cablePullRadius* sqrt(2);
-	cablePathCorner = [0,cablePullRadius-cableDiameter/2,tubSectionLen/2];
+	cablePathCorner = [0,cablePullRadius,tubSectionLen/2];
 	difference(){
 		union(){
-			translate([0,cablePullRadius,0]){
+			translate([0,cablePullRadius,minimumLinkLength/4]){
 				cylinder(h=linkLength,d=cableDiameter,center=true,$fn=6);
 			}
 			translate(cablePathCorner){
 				rotate([-90,0,0])
 					translate([0,0,tubSectionLen/2])
-						cylinder(h=tubSectionLen,d=cableDiameter,center=true,$fn=6);// cable out-put tube
+						cylinder(h=tubSectionLen,d=HiLoScrewDiameter()-1,center=true,$fn=6);// cable out-put tube
 			}
 			
 			translate([0,cablePullRadius,-(tubSectionLen/2-cableDiameter/4)]){
@@ -67,7 +67,7 @@ module guideTubes(cablePullRadius=5,linkLength=50){
 				
 				// void for flap
 				//cube([cableDiameter,cableDiameter*3,cableDiameter*3]);
-				translate([HiLoScrewLength(),+HiLoScrewDiameter()/2+cableDiameter/2,-cableDiameter/2+HiLoScrewDiameter()/2])
+				translate([HiLoScrewLength(),+HiLoScrewDiameter(),0])
 					rotate([0,90,0])
 						HiLoScrew();
 			}
@@ -137,7 +137,7 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 				translate([-.1,0,0])
 				rotate([0,90,0]){
 					
-					cylinder(h=linkLength+minkowskiSphere,d=cableDiameter,center=true);// center tube
+					cylinder(h=linkLength+minimumLinkLength/2,d=cableDiameter,center=true);// center tube
 					
 					// string lines
 					guideTubes(cablePullRadius=cablePullRadius,linkLength = linkLength  );
@@ -154,6 +154,7 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 }
 
 function getCurlOrentation(input) = (input[0]==0?input[2]/2:0);
+//function getCurlOrentation(input) = (input[0]==0?0:0);
 
 function getCurlTranslateVector(input) =((getLinkLengthBounded(input)/2-minimumLinkLength/2));
 
