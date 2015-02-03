@@ -50,6 +50,7 @@ module guideTubes(cablePullRadius=5,linkLength=50){
 	tubSectionLen = 32;
 	innerSectionLen = cablePullRadius* sqrt(2);
 	cablePathCorner = [0,cablePullRadius,tubSectionLen/2];
+	filletDiameter=cableDiameter/2;
 	difference(){
 		union(){
 			translate([0,cablePullRadius,minimumLinkLength/4]){
@@ -64,7 +65,16 @@ module guideTubes(cablePullRadius=5,linkLength=50){
 			translate([0,cablePullRadius,-(tubSectionLen/2-cableDiameter/4)]){
 				rotate([-90,0,0])
 					translate([0,0,-innerSectionLen/2.5])
-						cylinder(h=linkLength*2,d=cableDiameter,center=true,$fn=6);
+						cylinder(h=linkLength*2,d=cableDiameter,center=true,$fn=6);// cable adjustment hole
+				difference(){
+					translate([0,-cablePullRadius/2-.1,-(minimumLinkLength-tubSectionLen)/2]){
+						cube([cableDiameter,cablePullRadius,(minimumLinkLength-tubSectionLen)+6], center=true);// Pull path
+					}
+					translate([0,-cablePullRadius/4-filletDiameter/2-.2,cablePullRadius/4+filletDiameter/2+.2])
+						rotate([0,90,0])
+							cylinder(h=cableDiameter+.1,d=filletDiameter,center=true,$fn=100);// cable adjustment hole
+				}
+				
 			}
 			//tab for screw holes
 			translate(cablePathCorner){
@@ -143,8 +153,12 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 				translate([-.1,0,0])
 				rotate([0,90,0]){
 					
-					// center tube
-					cylinder(h=linkLength*2,d=cableDiameter,center=true);
+					translate([0,0,(getLinkLengthBounded(input)-minimumLinkLength)/2]){
+						// center tube
+						cylinder(h=linkLength+.3,d=hingeThickness+1,center=true);
+						translate([0,0,3])
+						cylinder(h=getLinkLengthBounded(input)/2+.2-3,d1=hingeThickness+1,d2=cablePullRadius*2-1);
+					}
 					
 					// string lines
 					guideTubes(cablePullRadius=cablePullRadius,linkLength = linkLength  );
@@ -221,7 +235,7 @@ module basicLeg(input, depth=0,cablePullRadius=5,linkThickness){
 
 		if(depth < (len(input)-1)){		
 			moveFromLinkCenterToJointCenter(input[depth])
-				translate([minimumLinkLength/2,0,0])
+				translate([minimumLinkLength/2+(getLinkLengthBounded(input[depth])-minimumLinkLength)/2,0,0])
 						basicLeg(	input, 
 									depth+1,// increment the depth to walk down the list
 									cablePullRadius=cablePullRadius,
