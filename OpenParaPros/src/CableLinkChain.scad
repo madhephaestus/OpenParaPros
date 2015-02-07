@@ -175,7 +175,7 @@ module cableLink(input=[0,-45,45,25,10,15],cablePullRadius=5,linkThickness){
 }
 
 
-function getCurlOrentation(input) = (input[0]==0?input[2]/1.5:0);
+function getCurlOrentation(input) = (input[0]==0?(input[2]==45?input[2]/1.5:input[2]/1.5):0);
 //function getCurlOrentation(input) = (input[0]==0?0:0);
 
 function getCurlTranslateVector(input) =((getLinkLengthBounded(input)/2-minimumLinkLength/2));
@@ -275,14 +275,14 @@ function calcServoDistanceForBoltOverlap(incrementAngle) = (MiniServoRestraining
 
 
 module radialServoBlock(numberOfServos=3, thickness){
-	rangeOfSweep=230;
+	rangeOfSweep=200;
 	startAngle=(-rangeOfSweep/2);
 	increment=rangeOfSweep/numberOfServos;
 	retainingDiskDiameter = calcServoDistanceForBoltOverlap(increment)*3-2;
 	difference(){
 		union(){
-			translate([-retainingDiskDiameter/3+1,0,0])
-				cylinder(thickness/2-cableDiameter,d=retainingDiskDiameter);// base circle
+
+			cylinder(thickness/2-cableDiameter,d=retainingDiskDiameter);// base circle
 			pilarBlock(thickness);
 
 		}
@@ -290,24 +290,28 @@ module radialServoBlock(numberOfServos=3, thickness){
 			translate([0,0,HiLoScrewLength()-.2])
 				HiLoScrew();
 		}
-		translate([-MiniServoRestrainingScrewDistance()/2,0,0])
+
 		for (i = [startAngle+(increment/2):increment:(rangeOfSweep+startAngle)-1]) { 
 			echo("Servo at ",i, " at distance ",calcServoDistanceForBoltOverlap(increment));
+			//#cylinder(h=thickness,d=10);// base circle
 			rotate([0,0,-i+180])
 				translate([calcServoDistanceForBoltOverlap(increment),-MiniServoBaseLength()/2,thickness/2-MiniServoHeight()+MiniServoWingsHeight()])
 					MiniServoMotor(true, 2, true, .2);
 		}
-		translate([0,-thickness/2+minkowskiSphere/2,-.1])
-		cube([thickness,thickness-minkowskiSphere,thickness+.2]);// finger joint brick
+		translate([0,-(thickness/2)-2.5,-.1])
+		cube([minimumLinkLength,thickness+.2+5,thickness+.2]);// finger joint brick
+		translate([thickness-10,-(retainingDiskDiameter/2),-.1])
+		cube([thickness+10,retainingDiskDiameter,thickness+.2]);// finger joint brick
 	}
 }
 
 
 difference(){
-	translate([-40,0,0]){
+	translate([-50,0,0]){
 		basicLeg(input = [ [90,-45,45,minimumLinkLength],
-		                   [0,-45,45,60],
-		                   [0,0,90,60+minimumLinkLength/2-ballendoffset]
+		                   [0,-45,45,minimumLinkLength],
+		                   [0,0,45,minimumLinkLength],
+		                   [0,0,45,minimumLinkLength]
 		                  ],
 		                  cablePullRadius=cablePullRadius,
 		                  linkThickness=linkThickness
